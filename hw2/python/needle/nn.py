@@ -184,7 +184,6 @@ class BatchNorm1d(Module):
         return self.weight.broadcast_to(x.shape) * x_hat + self.bias.broadcast_to(
             x.shape
         )
-
         ### END YOUR SOLUTION
 
 
@@ -219,7 +218,11 @@ class Dropout(Module):
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if self.training:
+            mask = init.randb(*x.shape, p=1 - self.p, device=x.device) / (1 - self.p)
+            return ops.multiply(x, mask)
+        else:
+            return x
         ### END YOUR SOLUTION
 
 
@@ -230,5 +233,5 @@ class Residual(Module):
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return x + self.fn(x)
         ### END YOUR SOLUTION
