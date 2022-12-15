@@ -1,2 +1,2 @@
-# dlsyscource
-My solutions of dlsyscource @ CMU 2022 
+# dlsyscourse
+My solutions of dlsyscourse @ CMU 2022 
