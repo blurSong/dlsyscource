@@ -1,4 +1,3 @@
-/mnt/c/SRCs/dlsyscourse/hw3/build/CMakeFiles/ndarray_backend_cpu.dir
-/mnt/c/SRCs/dlsyscourse/hw3/build/CMakeFiles/ndarray_backend_cuda.dir
-/mnt/c/SRCs/dlsyscourse/hw3/build/CMakeFiles/edit_cache.dir
-/mnt/c/SRCs/dlsyscourse/hw3/build/CMakeFiles/rebuild_cache.dir
+/mnt/d/SRCs/dlsyscourse/hw3/build/CMakeFiles/ndarray_backend_cpu.dir
+/mnt/d/SRCs/dlsyscourse/hw3/build/CMakeFiles/edit_cache.dir
+/mnt/d/SRCs/dlsyscourse/hw3/build/CMakeFiles/rebuild_cache.dir
