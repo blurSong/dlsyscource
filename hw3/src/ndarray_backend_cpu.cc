@@ -82,9 +82,6 @@ namespace needle {
         }
       }
       /// END YOUR SOLUTION
-
-
-     /// END YOUR SOLUTION
     }
 
     void EwiseSetitem(const AlignedArray& a, AlignedArray* out, std::vector<uint32_t> shape,
@@ -100,16 +97,15 @@ namespace needle {
        *   offset: offset of the *out* array (not a, which has zero offset, being compact)
        */
        /// BEGIN YOUR SOLUTION
-      auto size = out->size;
+      auto size = a.size;
       uint32_t dim = shape.size();
-      // uint32_t flag = dim - 1;
       std::vector<uint32_t> idx(dim, 0);
       for (size_t i = 0; i < size; i++) {
-        size_t idx_a = offset;
+        size_t idx_o = offset;
         for (uint32_t j = 0; j < dim; j++) {
-          idx_a += idx[j] * strides[j];
+          idx_o += idx[j] * strides[j];
         }
-        out->ptr[i] = a.ptr[idx_a];
+        out->ptr[idx_o] = a.ptr[i];
         idx[dim - 1]++;
         for (uint32_t j = dim - 1; j > 0; j--) {
           if (idx[j] == shape[j]) {
@@ -139,14 +135,13 @@ namespace needle {
 
        /// BEGIN YOUR SOLUTION
       uint32_t dim = shape.size();
-      // uint32_t flag = dim - 1;
       std::vector<uint32_t> idx(dim, 0);
       for (size_t i = 0; i < size; i++) {
-        size_t idx_a = offset;
+        size_t idx_out = offset;
         for (uint32_t j = 0; j < dim; j++) {
-          idx_a += idx[j] * strides[j];
+          idx_out += idx[j] * strides[j];
         }
-        out->ptr[i] = val;
+        out->ptr[idx_out] = val;
         idx[dim - 1]++;
         for (uint32_t j = dim - 1; j > 0; j--) {
           if (idx[j] == shape[j]) {
