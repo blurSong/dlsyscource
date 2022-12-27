@@ -246,10 +246,20 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        assert prod(new_shape) == self.size
-        new_strides = self.compact_strides(new_shape)
+        if prod(new_shape) == self.size:
+            real_shape = new_shape
+        else:
+            if new_shape.count(-1) == 1:
+                val = int(self.size / prod(new_shape) * -1)
+                real_shape = []
+                for sh in new_shape:
+                    real_shape.append(sh if sh != -1 else val)
+                real_shape = tuple(real_shape)
+            else:
+                raise ValueError()
+        new_strides = self.compact_strides(real_shape)
         return NDArray.make(
-            new_shape, strides=new_strides, device=self.device, handle=self._handle
+            real_shape, strides=new_strides, device=self.device, handle=self._handle
         )
         ### END YOUR SOLUTION
 
@@ -610,8 +620,22 @@ class NDArray:
         Note: compact() before returning.
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
+        strides = list(self.strides)
+        if isinstance(axes, int):
+            axes = (axes,)
+        offset = 0
+        for ax in axes:
+            strides[ax] = -strides[ax]
+            offset += (self.shape[ax] - 1) * self.strides[ax]
+        return NDArray.make(
+            self.shape,
+            strides=tuple(strides),
+            device=self.device,
+            handle=self._handle,
+            offset=offset,
+        ).compact()
+
+    ### END YOUR SOLUTION
 
     def pad(self, axes):
         """
@@ -620,7 +644,25 @@ class NDArray:
         axes = ( (0, 0), (1, 1), (0, 0)) pads the middle axis with a 0 on the left and right side.
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        shape = self.shape
+        new_shape = []
+        for i in range(len(shape)):
+            new_shape.append(int(shape[i] + axes[i][0] + axes[i][1]))
+
+        array = self.device.full(new_shape, 0, self.dtype)
+
+        offset = 0
+        for i in range(len(shape)):
+            offset += int(array.strides[i] * axes[i][0])
+        self.device.ewise_setitem(
+            self._handle,
+            array._handle,
+            shape,
+            array._strides,
+            offset,
+        )
+
+        return array
         ### END YOUR SOLUTION
 
 

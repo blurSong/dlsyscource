@@ -26,7 +26,9 @@ class RandomFlipHorizontal(Transform):
         """
         flip_img = np.random.rand() < self.p
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if flip_img:
+            img = img[:, ::-1, :]
+        return img
         ### END YOUR SOLUTION
 
 
@@ -46,7 +48,15 @@ class RandomCrop(Transform):
             low=-self.padding, high=self.padding + 1, size=2
         )
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        h, w = img.shape[:2]
+        img = np.pad(
+            img,
+            ((self.padding, self.padding), (self.padding, self.padding), (0, 0)),
+            mode="constant",
+        )
+        x = self.padding + shift_x
+        y = self.padding + shift_y
+        return img[x : x + h, y : y + w, :]
         ### END YOUR SOLUTION
 
 
@@ -106,13 +116,26 @@ class DataLoader:
 
     def __iter__(self):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        self.index = 0
+        self.n = len(self.dataset)
+        if self.shuffle:
+            indexes = np.arange(self.n)
+            np.random.shuffle(indexes)
+            self.ordering = np.array_split(
+                indexes, range(self.batch_size, self.n, self.batch_size)
+            )
         ### END YOUR SOLUTION
         return self
 
     def __next__(self):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if self.index == len(self.ordering):
+            self.index = 0
+            raise StopIteration
+
+        batch = [Tensor(x) for x in self.dataset[self.ordering[self.index]]]
+        self.index += 1
+        return batch
         ### END YOUR SOLUTION
 
 
@@ -124,17 +147,23 @@ class MNISTDataset(Dataset):
         transforms: Optional[List] = None,
     ):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        super().__init__(transforms)
+        self.X, self.y = parse_mnist(image_filename, label_filename)
         ### END YOUR SOLUTION
 
     def __getitem__(self, index) -> object:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        x = self.X[index]
+        y = self.y[index]
+        x = x.reshape(-1, 28, 28, 1)
+        for i in range(x.shape[0]):
+            x[i] = self.apply_transforms(x[i])
+        return x, y
         ### END YOUR SOLUTION
 
     def __len__(self) -> int:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return self.X.shape[0]
         ### END YOUR SOLUTION
 
 
@@ -144,7 +173,7 @@ class CIFAR10Dataset(Dataset):
         base_folder: str,
         train: bool,
         p: Optional[int] = 0.5,
-        transforms: Optional[List] = None
+        transforms: Optional[List] = None,
     ):
         """
         Parameters:
@@ -156,8 +185,35 @@ class CIFAR10Dataset(Dataset):
         y - numpy array of labels
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        super().__init__(transforms)
+        if train:
+            files = [
+                "data_batch_1",
+                "data_batch_2",
+                "data_batch_3",
+                "data_batch_4",
+                "data_batch_5",
+            ]
+        else:
+            files = ["test_batch"]
+        X = []
+        y = []
+        for file in files:
+            data, labels = self.unpickle(os.path.join(base_folder, file))
+            X.append(data)
+            y.append(labels)
+        X = np.concatenate(X) / 255.0
+        y = np.concatenate(y)
+        self.n = X.shape[0]
+        X = X.reshape(self.n, -1, 32, 32)
+        self.X = X
+        self.y = y
         ### END YOUR SOLUTION
+
+    def unpickle(self, file):
+        with open(file, "rb") as fo:
+            dict = pickle.load(fo, encoding="bytes")
+        return dict[b"data"], dict[b"labels"]
 
     def __getitem__(self, index) -> object:
         """
@@ -165,7 +221,9 @@ class CIFAR10Dataset(Dataset):
         Image should be of shape (3, 32, 32)
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        x = self.apply_transforms(self.X[index])
+        y = self.y[index]
+        return x, y
         ### END YOUR SOLUTION
 
     def __len__(self) -> int:
@@ -173,7 +231,7 @@ class CIFAR10Dataset(Dataset):
         Returns the total number of examples in the dataset
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return self.n
         ### END YOUR SOLUTION
 
 
@@ -188,10 +246,6 @@ class NDArrayDataset(Dataset):
         return tuple([a[i] for a in self.arrays])
 
 
-
-
-
-
 class Dictionary(object):
     """
     Creates a dictionary from a list of words, mapping each word to a
@@ -201,6 +255,7 @@ class Dictionary(object):
     idx2word: list of words in the dictionary, in the order they were added
         to the dictionary (i.e. each word only appears once in this list)
     """
+
     def __init__(self):
         self.word2idx = {}
         self.idx2word = []
@@ -225,15 +280,15 @@ class Dictionary(object):
         ### END YOUR SOLUTION
 
 
-
 class Corpus(object):
     """
     Creates corpus from train, and test txt files.
     """
+
     def __init__(self, base_dir, max_lines=None):
         self.dictionary = Dictionary()
-        self.train = self.tokenize(os.path.join(base_dir, 'train.txt'), max_lines)
-        self.test = self.tokenize(os.path.join(base_dir, 'test.txt'), max_lines)
+        self.train = self.tokenize(os.path.join(base_dir, "train.txt"), max_lines)
+        self.test = self.tokenize(os.path.join(base_dir, "test.txt"), max_lines)
 
     def tokenize(self, path, max_lines=None):
         """
